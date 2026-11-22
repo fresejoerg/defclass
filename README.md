@@ -11,6 +11,10 @@
 - **Hierarchical two-stage routing (`hierarchical="auto"`)**: Clusters large label spaces (`>40` classes) and uses `top-k` cluster routing before leaf disambiguation.
 - **Self-consistency ensembling (`votes=3`)**: Optional majority voting across shuffled passes to eliminate residual sampling non-determinism.
 
+## Research Report
+
+The empirical ablation study, cross-architecture benchmarks (zero-shot LLMs, decision models, SetFit, sentence-transformer heads, and TF-IDF baselines), and literature review motivating `defclass`'s defaults are documented in [docs/research_report.md](docs/research_report.md).
+
 ## Best Practice: Provide a Golden Reference Dataset
 
 While `defclass` can synthesize definitions from semantic label names alone, **providing a golden reference dataset (`examples` per class plus a labeled `dev` split for `optimize`) is strongly recommended as best practice**. Without labeled reference examples, there is no way to test definition quality, verify alignment with domain-specific annotation conventions, or catch subtle boundary ambiguities.
