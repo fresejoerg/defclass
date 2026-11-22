@@ -9,6 +9,7 @@ from pathlib import Path
 import random
 import time
 from typing import Any
+import warnings
 
 from .definitions import generate_definitions
 from .hierarchy import ClusterNode, build_clusters
@@ -94,17 +95,37 @@ class ZeroShotClassifier:
         # Resolve or synthesize self-sufficient class definitions
         if definitions is not None:
             self.definitions = self._normalize_definitions(definitions)
+        elif self.generator_provider is None:
+            if self.labels_are_opaque:
+                raise ValueError(
+                    "Detected opaque class labels with a DecisionProvider and no `definitions` "
+                    "or `generator_provider`. Decision models cannot generate class definitions; "
+                    "provide `definitions` or a generative `generator_provider` with `examples`."
+                )
+            warnings.warn(
+                "Only a DecisionProvider was specified without `definitions` or a generative "
+                "`generator_provider`: no class definitions can be generated, so classification "
+                "will fall back to raw label descriptions.",
+                UserWarning,
+                stacklevel=2,
+            )
+            self.definitions = {
+                lbl: ClassDefinition(
+                    label=lbl,
+                    semantic_name=lbl,
+                    definition=f"User intent or category is '{lbl.replace('_', ' ').replace('-', ' ')}'.",
+                    inclusion_criteria=[],
+                    exclusion_criteria=[],
+                    representative_patterns=[],
+                )
+                for lbl in self.labels
+            }
         else:
             if self.labels_are_opaque and not examples:
                 raise ValueError(
                     "Detected opaque class labels without `definitions` or `examples`. "
                     "Provide either `definitions` or representative `examples` so self-sufficient "
                     "definitions can be generated."
-                )
-            if self.generator_provider is None:
-                raise ValueError(
-                    "A generative `generator_provider` is required to auto-generate definitions "
-                    "when using a DecisionProvider without pre-supplied `definitions`."
                 )
             self.definitions = generate_definitions(
                 provider=self.generator_provider,
@@ -132,16 +153,20 @@ class ZeroShotClassifier:
         )
         if use_hier:
             if self.generator_provider is None:
-                raise ValueError(
-                    "A generative `generator_provider` is required to summarize clusters "
-                    "when `hierarchical=True` with a DecisionProvider."
+                warnings.warn(
+                    "Hierarchical clustering requires a generative `generator_provider` to "
+                    "summarize clusters; falling back to flat classification.",
+                    UserWarning,
+                    stacklevel=2,
                 )
-            self._clusters: dict[str, ClusterNode] | None = build_clusters(
-                self.generator_provider,
-                self.definitions,
-                num_clusters=num_clusters,
-                max_workers=max_workers,
-            )
+                self._clusters = None
+            else:
+                self._clusters = build_clusters(
+                    self.generator_provider,
+                    self.definitions,
+                    num_clusters=num_clusters,
+                    max_workers=max_workers,
+                )
         else:
             self._clusters = None
 

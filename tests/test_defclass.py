@@ -288,6 +288,20 @@ class TestDefClass(unittest.TestCase):
         self.assertAlmostEqual(sum(pred.probabilities.values()), 1.0, places=5)
         self.assertGreater(pred.probabilities["weather"], pred.probabilities["music"])
 
+    def test_decision_provider_only_warns_without_definitions(self) -> None:
+        dec = MockDecisionProvider()
+        with self.assertWarns(UserWarning):
+            clf = ZeroShotClassifier(
+                labels=["weather", "music"],
+                provider=dec,
+                hierarchical=False,
+            )
+        pred = clf.predict("check the weather")
+        self.assertEqual(pred.label, "weather")
+
+        with self.assertRaises(ValueError):
+            ZeroShotClassifier(labels=["0", "1"], provider=dec)
+
 
 if __name__ == "__main__":
     unittest.main()
