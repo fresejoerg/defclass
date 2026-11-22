@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "defclass"
+version = "0.1.0"
+description = "Provider-agnostic zero-shot generative text classification with self-sufficient definitions, opaque labels, positional shuffling, reflective optimization, and hierarchical routing."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/fresejoerg/defclass"
+Repository = "https://github.com/fresejoerg/defclass"
+
+[project.optional-dependencies]
+gemini = ["google-genai>=1.0.0"]
+anthropic = ["anthropic>=0.40.0"]
+litellm = ["litellm>=1.0.0"]
+dspy = ["dspy>=2.5.0"]
+embeddings = ["sentence-transformers>=3.0.0", "scikit-learn>=1.4.0"]
+all = [
+    "google-genai>=1.0.0",
+    "anthropic>=0.40.0",
+    "litellm>=1.0.0",
+    "sentence-transformers>=3.0.0",
+    "scikit-learn>=1.4.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/defclass"]
